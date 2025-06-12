@@ -1,0 +1,18 @@
+names:
+- '0'
+- '1'
+- '2'
+- '5'
+- '6'
+- '7'
+- '8'
+nc: 7
+roboflow:
+  license: CC BY 4.0
+  project: fish4knowledge-dataset
+  url: https://universe.roboflow.com/g18l5754/fish4knowledge-dataset/dataset/3
+  version: 3
+  workspace: g18l5754
+test: ../test/images
+train: ../train/images
+val: ../valid/images

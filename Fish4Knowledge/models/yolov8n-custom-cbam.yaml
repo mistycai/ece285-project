@@ -1,0 +1,45 @@
+# Ultralytics YOLOv8.0n custom architecture with CBAM
+# Parameters
+nc: 23  # number of classes - MUST MATCH YOUR data.yaml
+depth_multiple: 0.33  # model depth multiple
+width_multiple: 0.25  # layer channel multiple
+
+# Anchors
+anchors: null
+
+# Backbone (with corrected indices for your reference)
+# index: from, repeats, module, args
+backbone:
+  - [-1, 1, Conv, [16, 3, 2]]    # 0
+  - [-1, 1, Conv, [32, 3, 2]]    # 1
+  - [-1, 2, C2f, [32, True]]     # 2
+  - [-1, 1, Conv, [64, 3, 2]]    # 3
+  - [-1, 4, C2f, [64, True]]     # 4 (P3/8 feature)
+  - [-1, 1, CBAM, [16]]          # 5 (P3/8 feature)
+  - [-1, 1, Conv, [128, 3, 2]]   # 6
+  - [-1, 4, C2f, [128, True]]    # 7 (P4/16 feature)
+  - [-1, 1, CBAM, [32]]          # 8 (P4/16 feature)
+  - [-1, 1, Conv, [256, 3, 2]]   # 9
+  - [-1, 2, C2f, [256, True]]    # 10 (P5/32 feature)
+  - [-1, 1, CBAM, [64]]          # 11 (P5/32 feature)
+  - [-1, 1, SPPF, [256, 5]]      # 12
+
+# Head
+head:
+  - [-1, 1, nn.Upsample, [null, 2, 'nearest']] # 13
+  - [[-1, 8], 1, Concat, [1]]  # 14: cat backbone P4 (from layer 8)
+  - [-1, 2, C2f, [128, False]] # 15
+
+  - [-1, 1, nn.Upsample, [null, 2, 'nearest']] # 16
+  - [[-1, 5], 1, Concat, [1]]  # 17: <<< CORRECTED: Was [-1, 6]. Now connects to layer 5 (P3 scale) from the backbone.
+  - [-1, 2, C2f, [64, False]]  # 18
+
+  - [-1, 1, Conv, [64, 3, 2]]
+  - [[-1, 15], 1, Concat, [1]] # cat head P4
+  - [-1, 2, C2f, [128, False]] # 21
+
+  - [-1, 1, Conv, [128, 3, 2]]
+  - [[-1, 12], 1, Concat, [1]]  # cat head P5
+  - [-1, 2, C2f, [256, False]] # 24
+
+  - [[18, 21, 24], 1, Detect, [nc]]  # Detect(P3, P4, P5)
